@@ -1,13 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 )
 
 type manager interface {
-	authenticate(username string, password string) (User, error)
+	authenticate(username string, password string) (user, error)
 }
 
 type userManager struct {
@@ -17,7 +19,9 @@ type userManager struct {
 const hiddenPassword = "xxxx"
 
 var (
+	//ErrInvalidUsername is a generic error for inavild username
 	ErrInvalidUsername = errors.New("Invalid username")
+	//ErrInvalidPassword is a generic error for inavild passwrod
 	ErrInvalidPassword = errors.New("Invalid password")
 )
 
@@ -25,14 +29,14 @@ func newUserManager(rw readerWriter) userManager {
 	return userManager{rw}
 }
 
-func (u userManager) authenticate(username string, password string) (User, error) {
+func (u userManager) authenticate(username string, password string) (user, error) {
 	rr := u.read(username)
 	if rr.err == ErrNoUsersFound || rr.err == ErrMoreThanOneUserFound {
-		return User{}, ErrInvalidUsername
+		return user{}, ErrInvalidUsername
 	}
 
 	if rr.err != nil {
-		return User{}, fmt.Errorf("Error while retrieving user %s: %v", username, rr.err.Error())
+		return user{}, fmt.Errorf("Error while retrieving user %s: %v", username, rr.err.Error())
 	}
 
 	if rr.user.username == username && rr.user.password == password {
@@ -40,10 +44,10 @@ func (u userManager) authenticate(username string, password string) (User, error
 		return rr.user, nil
 	}
 
-	return User{}, ErrInvalidPassword
+	return user{}, ErrInvalidPassword
 }
 
-func (manager *Manager) sessionId() string {
+func sessionID() string {
 	b := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		return ""

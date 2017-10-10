@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jawher/mow.cli"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gorilla/mux"
+	"github.com/jawher/mow.cli"
 )
 
 func main() {
@@ -42,7 +43,7 @@ func main() {
 	}
 
 	userManager := newUserManager(rw)
-	handler := newHttpHandler(userManager)
+	handler := newHTTPHandler(userManager)
 
 	app.Action = func() {
 		go listen(*port, handler)

@@ -9,19 +9,26 @@ import (
 const driver = "postgress"
 
 var (
+	// ErrMoreThanOneUserFound is an error for specifing that more than one user with the same username was found
 	ErrMoreThanOneUserFound = errors.New("More than one user found with the same username")
-	ErrNoUsersFound         = errors.New("No users found")
+	//ErrNoUsersFound that no user was found in the database
+	ErrNoUsersFound = errors.New("No users found")
 )
+
+type user struct {
+	username string
+	password string
+}
 
 type readerWriter interface {
 	read(username string) readResult
-	write(user User) error
+	write(user user) error
 	delete(username string) error
 	close()
 }
 
 type readResult struct {
-	user User
+	user user
 	err  error
 }
 
@@ -43,7 +50,7 @@ func (rw userReaderWriter) read(username string) readResult {
 
 	rows, err := rw.Query("SELECT * FROM users WHERE username=$1", username)
 	if err != nil {
-		return readResult{user: User{}, err: err}
+		return readResult{user: user{}, err: err}
 	}
 
 	for rows.Next() {
@@ -52,20 +59,20 @@ func (rw userReaderWriter) read(username string) readResult {
 
 		err := rows.Scan(&username, &password)
 		if err != nil {
-			return readResult{user: User{}, err: err}
+			return readResult{user: user{}, err: err}
 		}
 
 		if rows.Next() {
-			return readResult{user: User{}, err: ErrMoreThanOneUserFound}
+			return readResult{user: user{}, err: ErrMoreThanOneUserFound}
 		}
 
-		return readResult{user: User{username: username, password: password}, err: nil}
+		return readResult{user: user{username: username, password: password}, err: nil}
 	}
 
-	return readResult{user: User{}, err: ErrNoUsersFound}
+	return readResult{user: user{}, err: ErrNoUsersFound}
 }
 
-func (rw userReaderWriter) write(user User) error {
+func (rw userReaderWriter) write(user user) error {
 	return rw.QueryRow("INSERT INTO users(usrname,password) VALUES ($1,$2)", user.username, user.password).Scan()
 }
 

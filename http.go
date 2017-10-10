@@ -9,7 +9,7 @@ type httpHandler struct {
 	manager
 }
 
-func newHttpHandler(manager manager) httpHandler {
+func newHTTPHandler(manager manager) httpHandler {
 	return httpHandler{manager}
 }
 
