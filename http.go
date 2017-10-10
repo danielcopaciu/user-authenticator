@@ -36,7 +36,12 @@ func (h httpHandler) doAuthentication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := json.Marshal(user)
+	resp := map[string]interface{}{
+		"username":  user.username,
+		"sessionID": sessionID(),
+	}
+
+	body, err := json.Marshal(resp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
